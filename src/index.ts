@@ -1,42 +1,34 @@
-import OpenAI from "openai";
-import { getConfig } from "./config";
+import type { ChatResponse } from "./chat-agent";
+import { chat } from "./chat-agent";
 import { logger } from "./logger";
-import { memory } from "./memory";
 
-const config = getConfig();
-logger.debug("Starting OpenAI client...");
+logger.info("Starting conversation...");
 
-const client = new OpenAI({
-	baseURL: config.litellmApiBase,
-	apiKey: config.litellmApiKey,
-});
+let ctx: ChatResponse = {
+	content: "",
+	messages: [
+		{
+			role: "system",
+			content: "You are a helpful assistant.",
+		},
+	],
+};
 
-logger.success("OpenAI client initialized.");
+// Chat with stdio
+while (true) {
+	const userInput = await new Promise<string>((resolve) => {
+		process.stdout.write("You: ");
+		process.stdin.once("data", (data) => {
+			resolve(data.toString().trim());
+		});
+	});
 
-logger.start("Sending test request...");
-
-const messages = [
-	{
-		role: "system",
-		content: "You are a helpful assistant.",
-	},
-	{
+	ctx.messages.push({
 		role: "user",
-		content: "Hello, world!",
-	},
-];
+		content: userInput,
+	});
 
-const response = await client.chat.completions.create({
-	model: "qwen3.5-35b-a3b",
-	messages: messages,
-});
+	ctx = await chat(ctx.messages, { remember: true });
 
-const responseContent = response.choices[0].message.content;
-logger.ready(`Response:${responseContent}`);
-
-messages.push({
-	role: "assistant",
-	content: responseContent,
-});
-
-await memory.add(messages, { userId: "yuseiito", metadata: {} });
+	process.stdout.write(`Assistant: ${ctx.content}\n`);
+}
