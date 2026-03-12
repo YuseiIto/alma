@@ -15,18 +15,28 @@ logger.success("OpenAI client initialized.");
 
 logger.start("Sending test request...");
 
+const messages = [
+	{
+		role: "system",
+		content: "You are a helpful assistant.",
+	},
+	{
+		role: "user",
+		content: "Hello, world!",
+	},
+];
+
 const response = await client.chat.completions.create({
 	model: "qwen3.5-35b-a3b",
-	messages: [
-		{
-			role: "user",
-			content: "Hello, world!",
-		},
-	],
+	messages: messages,
 });
 
-const reply = response.choices[0].message.content;
+const responseContent = response.choices[0].message.content;
+logger.ready(`Response:${responseContent}`);
 
-logger.ready(`Response:${reply}`);
+messages.push({
+	role: "assistant",
+	content: responseContent,
+});
 
-memory.add(response.choi);
+await memory.add(messages, { userId: "yuseiito", metadata: {} });
