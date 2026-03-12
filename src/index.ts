@@ -1,14 +1,14 @@
 import OpenAI from "openai";
-import { get_config } from "./config";
+import { getConfig } from "./config";
 import { logger } from "./logger";
+import { memory } from "./memory";
 
-const config = get_config();
-
+const config = getConfig();
 logger.debug("Starting OpenAI client...");
 
 const client = new OpenAI({
-	baseURL: config.litellm_api_base,
-	apiKey: config.litellm_api_key,
+	baseURL: config.litellmApiBase,
+	apiKey: config.litellmApiKey,
 });
 
 logger.success("OpenAI client initialized.");
@@ -25,4 +25,8 @@ const response = await client.chat.completions.create({
 	],
 });
 
-logger.ready(`Response:${response.choices[0].message.content}`);
+const reply = response.choices[0].message.content;
+
+logger.ready(`Response:${reply}`);
+
+memory.add(response.choi);
