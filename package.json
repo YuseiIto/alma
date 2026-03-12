@@ -1,0 +1,24 @@
+{
+  "name": "alma",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/YuseiIto/alma#readme",
+  "bugs": {
+    "url": "https://github.com/YuseiIto/alma/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YuseiIto/alma.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.6",
+    "typescript": "^5.9.3"
+  }
+}
