@@ -1,18 +1,10 @@
 import type { ChatResponse } from "./chat-agent";
-import { chat } from "./chat-agent";
+import { chat, start_chat } from "./chat-agent";
 import { logger } from "./logger";
 
 logger.info("Starting conversation...");
 
-let ctx: ChatResponse = {
-	content: "",
-	messages: [
-		{
-			role: "system",
-			content: "You are a helpful assistant.",
-		},
-	],
-};
+let ctx: ChatResponse = await start_chat();
 
 // Chat with stdio
 while (true) {

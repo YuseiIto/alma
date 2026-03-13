@@ -19,6 +19,18 @@ export interface ChatResponse {
 	messages: ChatMessage[];
 }
 
+export const start_chat = async (): Promise<ChatResponse> => {
+	const initialMessage: ChatMessage = {
+		role: "system",
+		content: "You are a helpful assistant.",
+	};
+
+	return {
+		content: initialMessage.content,
+		messages: [initialMessage],
+	};
+};
+
 export const chat = async (
 	messages: ChatMessage[],
 	chatConfig: ChatConfig,
