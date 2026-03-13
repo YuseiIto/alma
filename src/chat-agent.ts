@@ -1,4 +1,3 @@
-import type { ChatCompletionMessage } from "openai";
 import OpenAI from "openai";
 import { getConfig } from "./config";
 import { logger } from "./logger";
@@ -6,17 +5,22 @@ import { memory } from "./memory";
 
 const config = getConfig();
 
+export interface ChatMessage {
+	role: "system" | "user" | "assistant";
+	content: string;
+}
+
 export interface ChatConfig {
 	remember?: boolean;
 }
 
 export interface ChatResponse {
 	content: string;
-	messages: ChatCompletionMessage[];
+	messages: ChatMessage[];
 }
 
 export const chat = async (
-	messages: ChatCompletionMessage[],
+	messages: ChatMessage[],
 	chatConfig: ChatConfig,
 ): Promise<ChatResponse> => {
 	logger.debug("Starting OpenAI client...");
@@ -32,9 +36,9 @@ export const chat = async (
 		messages: messages,
 	});
 
-	const responseContent = response.choices[0].message.content.trim();
+	const responseContent = response.choices?.[0]?.message.content?.trim() ?? "";
 
-	const msgs = [
+	const msgs: ChatMessage[] = [
 		...messages,
 		{
 			role: "assistant",
