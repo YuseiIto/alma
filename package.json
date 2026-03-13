@@ -18,7 +18,8 @@
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"fix": "biome check --write .",
 		"lint": "biome check .",
-		"dev": "tsx src/index.ts",
+		"dev:cli": "tsx src/cli.ts",
+		"dev:serve-telegram": "tsx src/serve-telegram.ts",
 		"typecheck": "tsc --noEmit"
 	},
 	"devDependencies": {
