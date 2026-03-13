@@ -20,7 +20,7 @@ while (true) {
 		content: userInput,
 	});
 
-	ctx = await chat(ctx.messages, { remember: true });
+	ctx = await chat(ctx.messages, { remember: true, model: "qwen3.5-35b-a3b" });
 
 	process.stdout.write(`Assistant: ${ctx.content}\n`);
 }

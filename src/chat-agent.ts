@@ -11,6 +11,7 @@ export interface ChatMessage {
 }
 
 export interface ChatConfig {
+	model: string;
 	remember?: boolean;
 }
 
@@ -44,7 +45,7 @@ export const chat = async (
 	logger.success("OpenAI client initialized.");
 
 	const response = await client.chat.completions.create({
-		model: "qwen3.5-35b-a3b",
+		model: chatConfig.model,
 		messages: messages,
 	});
 
