@@ -1,8 +1,9 @@
 import type { Context } from "grammy";
 import { Bot } from "grammy";
 import { z } from "zod";
-import type { ChatConfig, ChatResponse, Message } from "./chat-agent";
+import type { ChatConfig } from "./chat-agent";
 import { getConfig } from "./config";
+import { Conversation } from "./conversation";
 
 const TextMessageContextSchema = z.object({
 	chat: z.object({
@@ -15,7 +16,7 @@ const TextMessageContextSchema = z.object({
 	}),
 });
 
-const thread: Message[] = [];
+const conversation = new Conversation("You are a helpful assistant");
 
 const onTextMessage = async (chatHandler: ChatHandler, ctx: Context) => {
 	const input = TextMessageContextSchema.parse(ctx);
@@ -25,28 +26,19 @@ const onTextMessage = async (chatHandler: ChatHandler, ctx: Context) => {
 	// const date = ctx.message.date;
 	const text = input.message.text;
 
-	thread.push({
-		role: "user",
-		content: text,
-	});
-
-	const response = await chatHandler(thread, {
+	const response = await chatHandler(text, conversation, {
 		remember: true,
 		model: "qwen3.5-35b-a3b",
 	});
 
-	thread.push({
-		role: "assistant",
-		content: response.content,
-	});
-
-	ctx.reply(response.content);
+	ctx.reply(response);
 };
 
 type ChatHandler = (
-	message: Message[],
+	userInput: string,
+	conversation: Conversation,
 	config: ChatConfig,
-) => Promise<ChatResponse>;
+) => Promise<string>;
 
 export const initTelegramBot = (chatHandler: ChatHandler): Bot => {
 	const config = getConfig();

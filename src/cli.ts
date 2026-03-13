@@ -1,7 +1,7 @@
-import type { ChatResponse } from "./chat-agent";
-import { chat, start_chat } from "./chat-agent";
+import { chat } from "./chat-agent";
+import { Conversation } from "./conversation";
 
-let ctx: ChatResponse = await start_chat();
+const conversation = new Conversation("You are a helpful assistant.");
 
 // Chat with stdio
 while (true) {
@@ -12,12 +12,10 @@ while (true) {
 		});
 	});
 
-	ctx.messages.push({
-		role: "user",
-		content: userInput,
+	const res = await chat(userInput, conversation, {
+		remember: true,
+		model: "qwen3.5-35b-a3b",
 	});
 
-	ctx = await chat(ctx.messages, { remember: true, model: "qwen3.5-35b-a3b" });
-
-	process.stdout.write(`Assistant: ${ctx.content}\n`);
+	process.stdout.write(`Assistant: ${res}\n`);
 }
