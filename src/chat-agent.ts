@@ -29,18 +29,18 @@ export const start_chat = async (): Promise<ChatResponse> => {
 	};
 };
 
+logger.debug("Starting OpenAI client...");
+const client = new OpenAI({
+	baseURL: config.litellmApiBase,
+	apiKey: config.litellmApiKey,
+});
+
+logger.success("OpenAI client initialized.");
+
 export const chat = async (
 	messages: Message[],
 	chatConfig: ChatConfig,
 ): Promise<ChatResponse> => {
-	logger.debug("Starting OpenAI client...");
-	const client = new OpenAI({
-		baseURL: config.litellmApiBase,
-		apiKey: config.litellmApiKey,
-	});
-
-	logger.success("OpenAI client initialized.");
-
 	const msgs: Message[] = [...messages];
 
 	while (true) {
@@ -116,7 +116,7 @@ export const chat = async (
 	}
 
 	const lastContent = msgs[msgs.length - 1]?.content ?? "";
-	const responseContent =
+	const rawContent =
 		typeof lastContent === "string"
 			? lastContent
 			: Array.isArray(lastContent)
@@ -124,6 +124,12 @@ export const chat = async (
 						.map((p) => ("text" in p ? (p as { text: string }).text : ""))
 						.join("")
 				: "";
+	// Some reasoning models (e.g. DeepSeek-R1) output <think>...</think> for CoT.
+	// Proxies like LiteLLM may strip the block but leave the closing </think> tag in content.
+	const responseContent = rawContent
+		.replace(/<think>[\s\S]*?<\/think>/g, "")
+		.replace(/<\/think>/g, "")
+		.trimStart();
 
 	if (chatConfig.remember) {
 		await memory.add(toMem0Messages(msgs), {
