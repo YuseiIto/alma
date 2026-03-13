@@ -16,21 +16,24 @@ const TextMessageContextSchema = z.object({
 	}),
 });
 
-const conversation = new Conversation("You are a helpful assistant");
+const conversations = new Map<number, Conversation>();
 
 const onTextMessage = async (chatHandler: ChatHandler, ctx: Context) => {
 	const input = TextMessageContextSchema.parse(ctx);
 
-	// const chatId = ctx.chat.id;
-	// const messageId = ctx.message.message_id;
-	// const date = ctx.message.date;
+	const chatId = input.chat.id;
 	const text = input.message.text;
+
+	let conversation = conversations.get(chatId);
+	if (!conversation) {
+		conversation = new Conversation("You are a helpful assistant.");
+		conversations.set(chatId, conversation);
+	}
 
 	const response = await chatHandler(text, conversation, {
 		remember: true,
 		model: "qwen3.5-35b-a3b",
 	});
-
 	ctx.reply(response);
 };
 
