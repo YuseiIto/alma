@@ -1,7 +1,7 @@
 import type { Context } from "grammy";
 import { Bot } from "grammy";
 import { z } from "zod";
-import type { ChatConfig, ChatMessage, ChatResponse } from "./chat-agent";
+import type { ChatConfig, ChatResponse, Message } from "./chat-agent";
 import { getConfig } from "./config";
 
 const TextMessageContextSchema = z.object({
@@ -15,7 +15,7 @@ const TextMessageContextSchema = z.object({
 	}),
 });
 
-const thread: ChatMessage[] = [];
+const thread: Message[] = [];
 
 const onTextMessage = async (chatHandler: ChatHandler, ctx: Context) => {
 	const input = TextMessageContextSchema.parse(ctx);
@@ -44,7 +44,7 @@ const onTextMessage = async (chatHandler: ChatHandler, ctx: Context) => {
 };
 
 type ChatHandler = (
-	message: ChatMessage[],
+	message: Message[],
 	config: ChatConfig,
 ) => Promise<ChatResponse>;
 
