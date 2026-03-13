@@ -13,13 +13,20 @@ export const memory = new Memory({
 			baseURL: config.litellmApiBase,
 		},
 	},
+	vectorStore: {
+		provider: "memory",
+		config: {
+			collectionName: "memories",
+			dimension: 256,
+		},
+	},
 	embedder: {
 		provider: "openai",
 		config: {
-			model: "lm_studio/text-embedding-bge-m3",
+			model: "ollama/bge-m3",
 			apiKey: config.litellmApiKey,
 			url: config.litellmApiBase,
-			embeddingDims: 1024,
+			embeddingDims: 256,
 		},
 	},
 });

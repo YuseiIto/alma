@@ -1,10 +1,15 @@
 import type { ChatResponse } from "./chat-agent";
 import { chat, start_chat } from "./chat-agent";
 import { logger } from "./logger";
+import { initTelegramBot } from "./telegram";
 
 logger.info("Starting conversation...");
 
 let ctx: ChatResponse = await start_chat();
+
+const bot = initTelegramBot(chat);
+
+bot.start();
 
 // Chat with stdio
 while (true) {
