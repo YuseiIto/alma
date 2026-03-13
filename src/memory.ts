@@ -18,7 +18,8 @@ export const memory = new Memory({
 		config: {
 			model: "lm_studio/text-embedding-bge-m3",
 			apiKey: config.litellmApiKey,
-			baseURL: config.litellmApiBase,
+			url: config.litellmApiBase,
+			embeddingDims: 1024,
 		},
 	},
 });
