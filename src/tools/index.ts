@@ -13,6 +13,15 @@ const mcpConfigs: MCPServerConfig[] = [
 			Authorization: `Bearer ${process.env.TODOIST_MCP_KEY}`,
 		},
 	},
+	{
+		name: "searxng",
+		transport: "stdio",
+		command: "npx",
+		args: ["-y", "mcp-searxng"],
+		env: {
+			SEARXNG_URL: process.env.SEARXNG_URL ?? "",
+		},
+	},
 ];
 
 export const tools: Tool[] = [

@@ -13,6 +13,7 @@ export interface StdioMcpServerConfig {
 	transport: "stdio";
 	command: string;
 	args?: string[];
+	env?: Record<string, string>;
 }
 
 export interface HttpMcpServerConfig {
@@ -28,6 +29,7 @@ const createTransport = (config: MCPServerConfig): Transport => {
 			return new StdioClientTransport({
 				command: config.command,
 				args: config.args ?? [],
+				env: config.env ?? {},
 			});
 		case "http":
 			// StreamableHTTPClientTransport.sessionId is `string | undefined` but Transport interface
