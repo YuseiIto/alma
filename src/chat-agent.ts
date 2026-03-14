@@ -4,7 +4,7 @@ import type { Conversation, Message } from "./conversation";
 import { stringifyMessageContent } from "./conversation";
 import { logger } from "./logger";
 import { memory } from "./memory";
-import { dispatchTool, tools } from "./tools";
+import { toolRegistry } from "./tools";
 
 const config = getConfig();
 logger.debug("Starting OpenAI client...");
@@ -45,7 +45,7 @@ export const chat = async (
 		const response = await client.chat.completions.create({
 			model: chatConfig.model,
 			messages: conversation.buildMessages(userInput),
-			tools,
+			tools: toolRegistry.toolDefinitions(),
 		});
 		logger.ready("Received response from the model.");
 
@@ -81,13 +81,11 @@ export const chat = async (
 				if (toolCall.type !== "function") {
 					throw new Error(`Unsupported tool call type: ${toolCall.type}`);
 				}
-				const toolName = toolCall.function.name;
-				logger.start(`Calling tool ${toolName}`);
-				const result = await dispatchTool(
+				const result = await toolRegistry.execute(
 					toolCall.function.name,
 					toolCall.function.arguments,
 				);
-				logger.ready(`Tool ${toolName} returned result: ${result}`);
+
 				conversation.add({
 					role: "tool",
 					tool_call_id: toolCall.id,
