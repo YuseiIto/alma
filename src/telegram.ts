@@ -37,7 +37,7 @@ const onTextMessage = async (chatHandler: ChatHandler, ctx: Context) => {
 
 	const response = await chatHandler(text, conversation, {
 		remember: true,
-		model: "qwen3.5-35b-a3b",
+		model: "openrouter/z-ai/glm-5",
 	});
 	ctx.reply(response);
 };

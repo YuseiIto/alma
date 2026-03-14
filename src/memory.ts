@@ -9,7 +9,7 @@ export const memory = new Memory({
 	llm: {
 		provider: "openai",
 		config: {
-			model: "lm_studio/qwen3.5-9b",
+			model: "openrouter/openai/gpt-4o-nano",
 			apiKey: config.litellmApiKey,
 			baseURL: config.litellmApiBase,
 		},
