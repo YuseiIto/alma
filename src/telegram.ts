@@ -5,6 +5,11 @@ import type { ChatConfig } from "./chat-agent";
 import { getConfig } from "./config";
 import { Conversation } from "./conversation";
 
+
+const systemPrompt = `You are a helpful assistant accessible via Telegram.
+Since Telegram does not render markdown, respond in plain text only — avoid headers (#), bold (**), or other markdown syntax.
+Keep responses concise and direct, as a personal assistant would.`;
+
 const TextMessageContextSchema = z.object({
 	chat: z.object({
 		id: z.number(),
@@ -26,7 +31,7 @@ const onTextMessage = async (chatHandler: ChatHandler, ctx: Context) => {
 
 	let conversation = conversations.get(chatId);
 	if (!conversation) {
-		conversation = new Conversation("You are a helpful assistant.");
+		conversation = new Conversation(systemPrompt);
 		conversations.set(chatId, conversation);
 	}
 
