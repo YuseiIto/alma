@@ -4,6 +4,7 @@ import type { Conversation, Message } from "./conversation";
 import { stringifyMessageContent } from "./conversation";
 import { logger } from "./logger";
 import { memory } from "./memory";
+import { sanitizeContent } from "./sanitize";
 import { toolRegistry } from "./tools";
 
 const config = getConfig();
@@ -19,14 +20,6 @@ export interface ChatConfig {
 	model: string;
 	remember?: boolean;
 }
-
-// Some reasoning models (e.g. DeepSeek-R1) output <think>...</think> for CoT.
-// Proxies like LiteLLM may strip the block but leave the closing </think> tag in content.
-const sanitizeContent = (content: string): string =>
-	content
-		.replace(/<think>[\s\S]*?<\/think>/g, "")
-		.replace(/<\/think>/g, "")
-		.trimStart();
 
 const toText = (msg: Message): string =>
 	sanitizeContent(
