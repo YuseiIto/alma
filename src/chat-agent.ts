@@ -39,6 +39,7 @@ export const chat = async (
 			model: chatConfig.model,
 			messages: conversation.buildMessages(userInput),
 			tools: toolRegistry.toolDefinitions(),
+			max_tokens: 6000,
 		});
 		logger.ready("Received response from the model.");
 
