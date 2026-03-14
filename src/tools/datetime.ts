@@ -5,7 +5,7 @@ export const getCurrentTimeTool: Tool = {
 		type: "function",
 		function: {
 			name: "get_current_time",
-			description: "Get the current time.",
+			description: "Get the current time in JST (UTC+9).",
 			parameters: {
 				type: "object",
 				properties: {},
@@ -14,6 +14,11 @@ export const getCurrentTimeTool: Tool = {
 		},
 	},
 	execute: () => {
-		return new Date().toISOString();
+		return `${new Date()
+			.toLocaleString("sv-SE", {
+				timeZone: "Asia/Tokyo",
+				hour12: false,
+			})
+			.replace(" ", "T")}+09:00 (JST)`;
 	},
 };
