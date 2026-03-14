@@ -29,6 +29,7 @@
 		"typescript": "^5.9.3"
 	},
 	"dependencies": {
+		"@modelcontextprotocol/sdk": "^1.27.1",
 		"consola": "^3.4.2",
 		"grammy": "^1.41.1",
 		"mem0ai": "^2.3.0",

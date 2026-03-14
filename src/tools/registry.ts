@@ -15,7 +15,8 @@ export class ToolRegistry {
 	}
 
 	registerToolBundle(bundle: ToolBundle) {
-		this.tools.concat(bundle.toTools());
+		const tools = bundle.toTools();
+		this.tools.push(...tools);
 	}
 
 	has(toolName: string): boolean {

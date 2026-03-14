@@ -1,7 +1,7 @@
 import type { Tool, ToolResult } from "./tool";
 
 export class ToolBundle {
-	private prefix: string;
+	readonly prefix: string;
 	private tools: Tool[];
 
 	constructor(prefix: string, tools: Tool[]) {
