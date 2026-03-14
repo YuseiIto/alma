@@ -30,6 +30,12 @@ const mcpConfigs: MCPServerConfig[] = [
 			"X-Goog-Api-Key": process.env.GOOGLE_MAPS_API_KEY ?? "",
 		},
 	},
+	{
+		name: "transit",
+		transport: "stdio",
+		command: "npx",
+		args: ["-y", "norikae-mcp"],
+	},
 ];
 
 export const tools: Tool[] = [
