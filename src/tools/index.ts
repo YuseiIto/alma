@@ -22,6 +22,14 @@ const mcpConfigs: MCPServerConfig[] = [
 			SEARXNG_URL: process.env.SEARXNG_URL ?? "",
 		},
 	},
+	{
+		name: "google_maps",
+		transport: "http",
+		url: "https://mapstools.googleapis.com/mcp",
+		headers: {
+			"X-Goog-Api-Key": process.env.GOOGLE_MAPS_API_KEY ?? "",
+		},
+	},
 ];
 
 export const tools: Tool[] = [
