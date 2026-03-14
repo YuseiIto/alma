@@ -1,8 +1,10 @@
 import * as readline from "node:readline";
 import { chat } from "./chat-agent";
 import { Conversation } from "./conversation";
+import { skillCatalog } from "./tools/index";
 
-const conversation = new Conversation("You are a helpful assistant.");
+const systemPrompt = `You are a helpful assistant.\n\n${skillCatalog}`;
+const conversation = new Conversation(systemPrompt);
 
 const rl = readline.createInterface({
 	input: process.stdin,
