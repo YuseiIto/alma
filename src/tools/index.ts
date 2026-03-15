@@ -1,3 +1,4 @@
+import { initializeSkills } from "../skills/index";
 import { getCurrentTimeTool } from "./datetime";
 import { type MCPServerConfig, toolBundleFromMcpConfig } from "./mcp";
 import { addMemoryTool, searchMemoryTool } from "./memory";
@@ -51,6 +52,13 @@ for (const config of mcpConfigs) {
 	toolRegistry.registerToolBundle(bundle);
 }
 
+const { catalog: skillCatalog, tool: activateSkillTool } =
+	await initializeSkills();
+if (activateSkillTool !== null) {
+	toolRegistry.registerTool(activateSkillTool);
+}
+
+export { skillCatalog };
 export { toolRegistry };
 export { ToolRegistry } from "./registry";
 export type { Tool } from "./tool";
