@@ -6,7 +6,7 @@ import {
 	writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { resolve } from "node:path";
+import { basename, resolve } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { logger } from "../../logger";
 import {
@@ -91,7 +91,7 @@ describe("discoverSkills", () => {
 			"valid-skill",
 		]);
 		expect(
-			discovered.every((entry) => entry.location.endsWith("/SKILL.md")),
+			discovered.every((entry) => basename(entry.location) === "SKILL.md"),
 		).toBe(true);
 	});
 
