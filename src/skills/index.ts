@@ -184,8 +184,17 @@ export function createActivateSkillTool(skills: SkillEntry[]): Tool | null {
 				return `Error: Skill "${skillName}" not found.`;
 			}
 
-			const fileContent = await readFile(skillEntry.location, "utf8");
-			const parsed = parseSkillMd(fileContent);
+			let parsed: ParsedSkill | null;
+			try {
+				const fileContent = await readFile(skillEntry.location, "utf8");
+				parsed = parseSkillMd(fileContent);
+			} catch (error) {
+				logger.error(
+					`Failed to load skill "${skillName}" from "${skillEntry.location}":`,
+					error,
+				);
+				return `Error: Failed to load skill "${skillName}".`;
+			}
 			if (!parsed) {
 				return `Error: Failed to parse skill "${skillName}".`;
 			}
