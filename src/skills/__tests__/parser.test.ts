@@ -61,7 +61,7 @@ describe("parseSkillMd", () => {
 	it("extracts markdown body content after frontmatter", () => {
 		const parsed = parseSkillMd(readFixture("multi-skill"));
 
-		expect(parsed?.body).toBe(
+		expect(parsed && parsed.body.replace(/\r\n/g, "\n")).toBe(
 			'# Multi Skill\n\nThis is a second valid fixture with different frontmatter structure to ensure the parser supports multiple valid configurations.\n\n## Details\n\n- Valid YAML with nested fields\n- Name: "multi-skill"\n- Description meets minimum requirements\n- Includes optional compatibility field\n',
 		);
 	});
