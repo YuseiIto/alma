@@ -179,10 +179,6 @@ export function createActivateSkillTool(skills: SkillEntry[]): Tool | null {
 			}
 			const skillName = args.name;
 
-			if (activated.has(skillName)) {
-				return `Skill "${skillName}" is already loaded in this conversation.`;
-			}
-
 			const skillEntry = skills.find((s) => s.name === skillName);
 			if (!skillEntry) {
 				return `Error: Skill "${skillName}" not found.`;
@@ -194,7 +190,6 @@ export function createActivateSkillTool(skills: SkillEntry[]): Tool | null {
 				return `Error: Failed to parse skill "${skillName}".`;
 			}
 
-			activated.add(skillName);
 			return `<skill_content name="${escapeXml(skillName)}">\n${parsed.body}\n</skill_content>`;
 		},
 	};
