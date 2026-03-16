@@ -54,6 +54,15 @@ export const initTelegramBot = (chatHandler: ChatHandler): Bot => {
 	const config = getConfig();
 	const bot = new Bot(config.telegramBotToken);
 
+	bot.command("clean", (ctx) => {
+		const chatId = ctx.chat.id;
+		const conversation = conversations.get(chatId);
+		if (conversation) {
+			conversation.clear();
+		}
+		ctx.reply("会話をリセットしました");
+	});
+
 	bot.on("message:text", (ctx) => {
 		onTextMessage(chatHandler, ctx);
 	});
