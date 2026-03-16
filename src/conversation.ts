@@ -74,4 +74,8 @@ export class Conversation {
 	getHistoryForMem0(): Mem0Message[] {
 		return toMem0Messages(this.history);
 	}
+
+	clear(): void {
+		this.history = [];
+	}
 }
