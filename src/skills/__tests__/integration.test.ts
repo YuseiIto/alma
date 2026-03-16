@@ -17,10 +17,18 @@ const writeSkill = (
 	root: string,
 	skillDir: string,
 	skillMdContent: string,
+	references?: { name: string; content: string }[],
 ): void => {
 	const dir = resolve(root, ".agents", "skills", skillDir);
 	mkdirSync(dir, { recursive: true });
 	writeFileSync(resolve(dir, "SKILL.md"), skillMdContent, "utf8");
+	if (references) {
+		const refsDir = resolve(dir, "references");
+		mkdirSync(refsDir, { recursive: true });
+		for (const ref of references) {
+			writeFileSync(resolve(refsDir, ref.name), ref.content, "utf8");
+		}
+	}
 };
 
 afterEach(() => {
@@ -49,6 +57,7 @@ describe("initializeSkills", () => {
 
 		expect(result).toHaveProperty("catalog");
 		expect(result).toHaveProperty("tool");
+		expect(result).toHaveProperty("readReferenceTool");
 		expect(typeof result.catalog).toBe("string");
 		expect(result.catalog.length).toBeGreaterThan(0);
 		expect(result.tool).not.toBeNull();
@@ -62,6 +71,7 @@ describe("initializeSkills", () => {
 
 		expect(result.catalog).toBe("");
 		expect(result.tool).toBeNull();
+		expect(result.readReferenceTool).toBeNull();
 	});
 
 	it("catalog contains all discovered skill names", async () => {
@@ -154,5 +164,44 @@ describe("initializeSkills", () => {
 		expect(executeResult).toContain('<skill_content name="execute-test">');
 		expect(executeResult).toContain(skillBody);
 		expect(executeResult).toContain("</skill_content>");
+	});
+
+	it("returns readReferenceTool when skills have references", async () => {
+		const projectRoot = makeTempDir();
+		const userHome = makeTempDir();
+
+		writeSkill(
+			projectRoot,
+			"ref-skill",
+			`---\nname: ref-skill\ndescription: Skill with refs\n---\n\n# Ref Skill`,
+			[{ name: "GUIDE.md", content: "# Guide\n\nSome guide content." }],
+		);
+
+		const result = await initializeSkills({ projectRoot, userHome });
+
+		expect(result.readReferenceTool).not.toBeNull();
+		const tool = result.readReferenceTool as Tool;
+		expect(tool.definition.function.name).toBe("read_reference");
+
+		const output = await tool.execute(
+			JSON.stringify({ skill_name: "ref-skill", filename: "GUIDE.md" }),
+		);
+		expect(output).toContain("# Guide");
+		expect(output).toContain("Some guide content.");
+	});
+
+	it("returns null readReferenceTool when no skills have references", async () => {
+		const projectRoot = makeTempDir();
+		const userHome = makeTempDir();
+
+		writeSkill(
+			projectRoot,
+			"no-ref-skill",
+			`---\nname: no-ref-skill\ndescription: No refs\n---\n\n# No Ref`,
+		);
+
+		const result = await initializeSkills({ projectRoot, userHome });
+
+		expect(result.readReferenceTool).toBeNull();
 	});
 });

@@ -49,9 +49,9 @@ Strips `<think>...</think>` blocks from reasoning model outputs (e.g., DeepSeek-
 
 ### Agent Skills (`src/skills/`)
 - **Parser** (`parser.ts`): parses SKILL.md YAML frontmatter (name, description) and extracts markdown body
-- **Index** (`index.ts`): discovery (scans `.agents/skills/` in project and `~/.agents/skills/` in user home; project-level overrides user-level on name collision), XML catalog builder for system prompt, `activate_skill` tool for on-demand loading with deduplication, and orchestration via `initializeSkills()`
+- **Index** (`index.ts`): discovery (scans `.agents/skills/` in project and `~/.agents/skills/` in user home; project-level overrides user-level on name collision), XML catalog builder for system prompt, `activate_skill` tool for on-demand loading, `read_reference` tool for reading reference documents, and orchestration via `initializeSkills()`
 
-Skills are discovered at startup and disclosed in the system prompt. Use `activate_skill` to load full skill instructions. To add project-specific skills, create a SKILL.md file in `.agents/skills/skill-name/`.
+Skills are discovered at startup and disclosed in the system prompt. Use `activate_skill` to load full skill instructions. To add project-specific skills, create a SKILL.md file in `.agents/skills/skill-name/`. Skills can include a `references/` subdirectory with additional `.md` documents; these are listed when a skill is activated and can be read on demand via the `read_reference` tool.
 
 ## Code Style
 

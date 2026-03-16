@@ -13,10 +13,16 @@ export { parseSkillMd };
 // Types
 // ---------------------------------------------------------------------------
 
+export interface ReferenceEntry {
+	name: string;
+	location: string;
+}
+
 export interface SkillEntry {
 	name: string;
 	description: string;
 	location: string;
+	references: ReferenceEntry[];
 }
 
 // ---------------------------------------------------------------------------
@@ -65,10 +71,22 @@ async function scanSkillsRoot(root: string): Promise<SkillEntry[]> {
 			continue;
 		}
 
+		const refsDir = join(skillsRoot, entry.name, "references");
+		let refEntries: Dirent<string>[];
+		try {
+			refEntries = await readdir(refsDir, { withFileTypes: true });
+		} catch {
+			refEntries = [];
+		}
+		const references = refEntries
+			.filter((e) => e.isFile() && e.name.endsWith(".md"))
+			.map((e) => ({ name: e.name, location: join(refsDir, e.name) }));
+
 		discovered.push({
 			name: parsed.name,
 			description: parsed.description,
 			location: skillPath,
+			references,
 		});
 	}
 
@@ -148,8 +166,6 @@ export function buildSkillCatalog(
 export function createActivateSkillTool(skills: SkillEntry[]): Tool | null {
 	if (skills.length === 0) return null;
 
-	const activated = new Set<string>();
-
 	return {
 		definition: {
 			type: "function",
@@ -199,7 +215,90 @@ export function createActivateSkillTool(skills: SkillEntry[]): Tool | null {
 				return `Error: Failed to parse skill "${skillName}".`;
 			}
 
-			return `<skill_content name="${escapeXml(skillName)}">\n${parsed.body}\n</skill_content>`;
+			let output = `<skill_content name="${escapeXml(skillName)}">\n${parsed.body}`;
+
+			if (skillEntry.references.length > 0) {
+				const refList = skillEntry.references
+					.map((r) => `- ${r.name}`)
+					.join("\n");
+				output += `\n\n<available_references>\n${refList}\n</available_references>`;
+			}
+
+			output += "\n</skill_content>";
+			return output;
+		},
+	};
+}
+
+// ---------------------------------------------------------------------------
+// Read reference tool
+// ---------------------------------------------------------------------------
+
+export function createReadReferenceTool(skills: SkillEntry[]): Tool | null {
+	const skillsWithRefs = skills.filter((s) => s.references.length > 0);
+	if (skillsWithRefs.length === 0) return null;
+
+	return {
+		definition: {
+			type: "function",
+			function: {
+				name: "read_reference",
+				description:
+					"Read a reference document from a skill's references/ directory.",
+				parameters: {
+					type: "object",
+					properties: {
+						skill_name: {
+							type: "string",
+							enum: skillsWithRefs.map((s) => s.name),
+							description: "Name of the skill containing the reference",
+						},
+						filename: {
+							type: "string",
+							description: "Filename of the reference (e.g. 'REFERENCE.md')",
+						},
+					},
+					required: ["skill_name", "filename"],
+				},
+			},
+		},
+		execute: async (argsJson: string): Promise<string> => {
+			let args: { skill_name: string; filename: string };
+			try {
+				args = JSON.parse(argsJson) as {
+					skill_name: string;
+					filename: string;
+				};
+			} catch {
+				return "Error: Invalid JSON arguments for read_reference.";
+			}
+
+			const { skill_name, filename } = args;
+
+			if (filename.includes("..")) {
+				return "Error: Invalid filename — path traversal is not allowed.";
+			}
+
+			const skillEntry = skillsWithRefs.find((s) => s.name === skill_name);
+			if (!skillEntry) {
+				return `Error: Skill "${skill_name}" not found or has no references.`;
+			}
+
+			const refEntry = skillEntry.references.find((r) => r.name === filename);
+			if (!refEntry) {
+				return `Error: Reference "${filename}" not found in skill "${skill_name}".`;
+			}
+
+			try {
+				const content = await readFile(refEntry.location, "utf8");
+				return `<reference_content skill="${escapeXml(skill_name)}" file="${escapeXml(filename)}">\n${content}\n</reference_content>`;
+			} catch (error) {
+				logger.error(
+					`Failed to read reference "${filename}" from skill "${skill_name}":`,
+					error,
+				);
+				return `Error: Failed to read reference "${filename}".`;
+			}
 		},
 	};
 }
@@ -210,12 +309,17 @@ export function createActivateSkillTool(skills: SkillEntry[]): Tool | null {
 
 export async function initializeSkills(
 	options: { projectRoot?: string; userHome?: string } = {},
-): Promise<{ catalog: string; tool: Tool | null }> {
+): Promise<{
+	catalog: string;
+	tool: Tool | null;
+	readReferenceTool: Tool | null;
+}> {
 	const skills = await discoverSkills(options);
 	logger.info(`Discovered ${skills.length} skill(s)`);
 
 	const catalog = buildSkillCatalog(skills);
 	const tool = createActivateSkillTool(skills);
+	const readReferenceTool = createReadReferenceTool(skills);
 
-	return { catalog, tool };
+	return { catalog, tool, readReferenceTool };
 }

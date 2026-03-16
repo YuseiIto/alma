@@ -12,6 +12,7 @@ import { logger } from "../../logger";
 import {
 	buildSkillCatalog,
 	createActivateSkillTool,
+	createReadReferenceTool,
 	discoverSkills,
 	type SkillEntry,
 } from "../index";
@@ -204,6 +205,49 @@ describe("discoverSkills", () => {
 			"valid-skill",
 		]);
 	});
+
+	it("collects references from references/ subdirectory", async () => {
+		const root = makeTempDir();
+		const userHome = makeTempDir();
+
+		writeSkill(
+			root,
+			"ref-skill",
+			`---\nname: ref-skill\ndescription: has refs\n---\n\n# Ref Skill\n`,
+		);
+		const refsDir = resolve(
+			root,
+			".agents",
+			"skills",
+			"ref-skill",
+			"references",
+		);
+		mkdirSync(refsDir, { recursive: true });
+		writeFileSync(resolve(refsDir, "DOC.md"), "# Doc", "utf8");
+		writeFileSync(resolve(refsDir, "not-md.txt"), "ignored", "utf8");
+
+		const discovered = await discoverSkills({ projectRoot: root, userHome });
+
+		expect(discovered).toHaveLength(1);
+		expect(discovered[0]?.references).toHaveLength(1);
+		expect(discovered[0]?.references[0]?.name).toBe("DOC.md");
+	});
+
+	it("returns empty references array when no references/ directory exists", async () => {
+		const root = makeTempDir();
+		const userHome = makeTempDir();
+
+		writeSkill(
+			root,
+			"no-refs",
+			`---\nname: no-refs\ndescription: no refs\n---\n\n# No Refs\n`,
+		);
+
+		const discovered = await discoverSkills({ projectRoot: root, userHome });
+
+		expect(discovered).toHaveLength(1);
+		expect(discovered[0]?.references).toEqual([]);
+	});
 });
 
 // ---------------------------------------------------------------------------
@@ -291,11 +335,23 @@ const makeSkills = (): SkillEntry[] => [
 		name: "valid-skill",
 		description: "A valid fixture skill",
 		location: resolve(fixturesRoot, "valid-skill", "SKILL.md"),
+		references: [
+			{
+				name: "REFERENCE.md",
+				location: resolve(
+					fixturesRoot,
+					"valid-skill",
+					"references",
+					"REFERENCE.md",
+				),
+			},
+		],
 	},
 	{
 		name: "multi-skill",
 		description: "A second fixture skill",
 		location: resolve(fixturesRoot, "multi-skill", "SKILL.md"),
+		references: [],
 	},
 ];
 
@@ -343,7 +399,29 @@ describe("createActivateSkillTool", () => {
 		expect(output).toContain("</skill_content>");
 	});
 
-	it("returns already loaded message for repeated activation", async () => {
+	it("includes available_references when skill has references", async () => {
+		const tool = createActivateSkillTool(makeSkills());
+		if (!tool) {
+			throw new Error("Expected activate_skill tool to be created");
+		}
+
+		const output = await tool.execute(JSON.stringify({ name: "valid-skill" }));
+		expect(output).toContain("<available_references>");
+		expect(output).toContain("- REFERENCE.md");
+		expect(output).toContain("</available_references>");
+	});
+
+	it("omits available_references when skill has no references", async () => {
+		const tool = createActivateSkillTool(makeSkills());
+		if (!tool) {
+			throw new Error("Expected activate_skill tool to be created");
+		}
+
+		const output = await tool.execute(JSON.stringify({ name: "multi-skill" }));
+		expect(output).not.toContain("<available_references>");
+	});
+
+	it("returns skill body on repeated activation without deduplication", async () => {
 		const tool = createActivateSkillTool(makeSkills());
 		if (!tool) {
 			throw new Error("Expected activate_skill tool to be created");
@@ -352,8 +430,93 @@ describe("createActivateSkillTool", () => {
 		await tool.execute(JSON.stringify({ name: "valid-skill" }));
 		const second = await tool.execute(JSON.stringify({ name: "valid-skill" }));
 
-		expect(second).toBe(
-			'Skill "valid-skill" is already loaded in this conversation.',
+		expect(second).toContain('<skill_content name="valid-skill">');
+		expect(second).toContain("# Valid Skill");
+	});
+});
+
+// ---------------------------------------------------------------------------
+// createReadReferenceTool
+// ---------------------------------------------------------------------------
+
+describe("createReadReferenceTool", () => {
+	it("returns null when no skills have references", () => {
+		const skills: SkillEntry[] = [
+			{
+				name: "no-refs",
+				description: "No references",
+				location: "/tmp/fake/SKILL.md",
+				references: [],
+			},
+		];
+		expect(createReadReferenceTool(skills)).toBeNull();
+	});
+
+	it("creates read_reference tool with enum of skills that have references", () => {
+		const tool = createReadReferenceTool(makeSkills());
+
+		expect(tool).not.toBeNull();
+		expect(tool?.definition.function.name).toBe("read_reference");
+		const params = tool?.definition.function.parameters as {
+			properties: { skill_name: { enum: string[] } };
+		};
+		expect(params.properties.skill_name.enum).toEqual(["valid-skill"]);
+	});
+
+	it("reads a reference file successfully", async () => {
+		const tool = createReadReferenceTool(makeSkills());
+		if (!tool) throw new Error("Expected tool to be created");
+
+		const output = await tool.execute(
+			JSON.stringify({ skill_name: "valid-skill", filename: "REFERENCE.md" }),
 		);
+
+		expect(output).toContain(
+			'<reference_content skill="valid-skill" file="REFERENCE.md">',
+		);
+		expect(output).toContain("# Reference Document");
+		expect(output).toContain("</reference_content>");
+	});
+
+	it("rejects path traversal in filename", async () => {
+		const tool = createReadReferenceTool(makeSkills());
+		if (!tool) throw new Error("Expected tool to be created");
+
+		const output = await tool.execute(
+			JSON.stringify({
+				skill_name: "valid-skill",
+				filename: "../SKILL.md",
+			}),
+		);
+
+		expect(output).toContain("path traversal is not allowed");
+	});
+
+	it("returns error for non-existent reference file", async () => {
+		const tool = createReadReferenceTool(makeSkills());
+		if (!tool) throw new Error("Expected tool to be created");
+
+		const output = await tool.execute(
+			JSON.stringify({
+				skill_name: "valid-skill",
+				filename: "NONEXISTENT.md",
+			}),
+		);
+
+		expect(output).toContain('Reference "NONEXISTENT.md" not found');
+	});
+
+	it("returns error for skill with no references", async () => {
+		const tool = createReadReferenceTool(makeSkills());
+		if (!tool) throw new Error("Expected tool to be created");
+
+		const output = await tool.execute(
+			JSON.stringify({
+				skill_name: "multi-skill",
+				filename: "REFERENCE.md",
+			}),
+		);
+
+		expect(output).toContain("not found or has no references");
 	});
 });

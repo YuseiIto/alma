@@ -52,10 +52,16 @@ for (const config of mcpConfigs) {
 	toolRegistry.registerToolBundle(bundle);
 }
 
-const { catalog: skillCatalog, tool: activateSkillTool } =
-	await initializeSkills();
+const {
+	catalog: skillCatalog,
+	tool: activateSkillTool,
+	readReferenceTool,
+} = await initializeSkills();
 if (activateSkillTool !== null) {
 	toolRegistry.registerTool(activateSkillTool);
+}
+if (readReferenceTool !== null) {
+	toolRegistry.registerTool(readReferenceTool);
 }
 
 export { skillCatalog };
