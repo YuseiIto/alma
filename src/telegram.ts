@@ -4,11 +4,13 @@ import { z } from "zod";
 import type { ChatConfig } from "./chat-agent";
 import { getConfig } from "./config";
 import { Conversation } from "./conversation";
-
+import { skillCatalog } from "./tools/index";
 
 const systemPrompt = `You are a helpful assistant accessible via Telegram.
 Since Telegram does not render markdown, respond in plain text only — avoid headers (#), bold (**), or other markdown syntax.
-Keep responses concise and direct, as a personal assistant would.`;
+Keep responses concise and direct, as a personal assistant would.
+
+${skillCatalog}`;
 
 const TextMessageContextSchema = z.object({
 	chat: z.object({

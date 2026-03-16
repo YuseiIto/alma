@@ -13,6 +13,8 @@ Alma is a personal AI chat assistant built with TypeScript. It connects to LLM b
 - `npm run lint` — Lint with Biome
 - `npm run fix` — Auto-fix lint/format issues with Biome
 - `npm run typecheck` — TypeScript type checking (`tsc --noEmit`)
+- `npm run test` — Run tests with vitest
+- `npm run test:watch` — Run tests in watch mode
 
 ## Environment Variables
 
@@ -44,6 +46,12 @@ Manages chat history, builds message arrays for the OpenAI API, and converts his
 
 ### Sanitization (`src/sanitize.ts`)
 Strips `<think>...</think>` blocks from reasoning model outputs (e.g., DeepSeek-R1) that LiteLLM may not fully clean.
+
+### Agent Skills (`src/skills/`)
+- **Parser** (`parser.ts`): parses SKILL.md YAML frontmatter (name, description) and extracts markdown body
+- **Index** (`index.ts`): discovery (scans `.agents/skills/` in project and `~/.agents/skills/` in user home; project-level overrides user-level on name collision), XML catalog builder for system prompt, `activate_skill` tool for on-demand loading with deduplication, and orchestration via `initializeSkills()`
+
+Skills are discovered at startup and disclosed in the system prompt. Use `activate_skill` to load full skill instructions. To add project-specific skills, create a SKILL.md file in `.agents/skills/skill-name/`.
 
 ## Code Style
 
